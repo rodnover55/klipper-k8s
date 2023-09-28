@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "chart.fullname" . }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "chart.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "chart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- with .Values.images.klipper }}
+          image: "{{ .repository }}:{{ .tag | default "latest" }}"
+          imagePullPolicy: {{ .pullPolicy }}
+          {{- end }}
+          volumeMounts:
+            {{- range .Values.mcus }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+            {{- end }}
+            - name: klipper-config
+              mountPath: /opt/printer_data/config
+            - name: run
+              mountPath: /opt/printer_data/run
+            - name: printer-data
+              mountPath: /opt/printer_data/gcodes
+          livenessProbe:
+            exec:
+              command: 
+                - ls 
+                - /opt/printer_data/run/klipper.sock
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command: 
+                - ls 
+                - /opt/printer_data/run/klipper.sock
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+        - name: moonraker
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- with .Values.images.moonraker }}
+          image: "{{ .repository }}:{{ .tag | default "latest" }}"
+          imagePullPolicy: {{ .pullPolicy }}
+          {{- end }}
+          ports:
+            - name: moonraker-http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          volumeMounts:
+            - name: klipper-config
+              mountPath: /opt/printer_data/config
+          livenessProbe:
+            httpGet:
+              path: /server/info
+              port: moonraker-http
+          readinessProbe:
+            httpGet:
+              path: /server/info
+              port: moonraker-http
+
+      volumes:
+        {{- range .Values.mcus }}
+        - name: {{ .name }}
+          hostPath:
+            path: {{ .hostPath }}
+        {{- end }}
+        - name: klipper-config
+          configMap:
+            name: {{ .Values.klipperConfig }}
+        - name: mainsail-config
+          configMap:
+            name: {{ .Values.klipperConfig }}
+            items: 
+              - key: config.json
+                path: config.json
+        - name: run
+          persistentVolumeClaim:
+           claimName: klipper-run
+        - name: printer-data
+          persistentVolumeClaim:
+           claimName: klipper-printer-data
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

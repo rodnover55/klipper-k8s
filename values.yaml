@@ -1,0 +1,53 @@
+images:
+  klipper:
+    repository: mkuf/klipper
+    pullPolicy: IfNotPresent
+    tag: ""
+  moonraker:
+    repository: mkuf/moonraker
+    pullPolicy: IfNotPresent
+    tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+mcus:
+  - name: usb
+    hostPath: /dev/serial/by-id
+    mountPath: /dev/serial/by-id
+
+klipperConfig: klipper-config
+printerDataName: printer-data
+
+serviceAccount:
+  create: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext:
+  privileged: true
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+  hosts:
+    - host: moonraker.home.rnr
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

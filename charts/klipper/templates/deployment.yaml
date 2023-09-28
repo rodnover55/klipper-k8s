@@ -92,12 +92,6 @@ spec:
         - name: klipper-config
           configMap:
             name: {{ .Values.klipperConfig }}
-        - name: mainsail-config
-          configMap:
-            name: {{ .Values.klipperConfig }}
-            items: 
-              - key: config.json
-                path: config.json
         - name: run
           persistentVolumeClaim:
            claimName: klipper-run

@@ -1,6 +1,0 @@
-{
-    "instancesDB": "json",
-    "instances": [
-      { "hostname": "moonraker.home.rnr", "port": 80 }
-    ]
-  }

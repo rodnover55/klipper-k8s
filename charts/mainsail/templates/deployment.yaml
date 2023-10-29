@@ -28,11 +28,6 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-                - name: mainsail
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-
-
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}

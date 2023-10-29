@@ -5,6 +5,8 @@ metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
 spec:
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "chart.selectorLabels" . | nindent 6 }}
@@ -68,20 +70,24 @@ spec:
           imagePullPolicy: {{ .pullPolicy }}
           {{- end }}
           ports:
-            - name: moonraker-http
+            - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           volumeMounts:
             - name: klipper-config
               mountPath: /opt/printer_data/config
+            - name: run
+              mountPath: /opt/printer_data/run
+            - name: printer-data
+              mountPath: /opt/printer_data/gcodes
           livenessProbe:
             httpGet:
               path: /server/info
-              port: moonraker-http
+              port: http
           readinessProbe:
             httpGet:
               path: /server/info
-              port: moonraker-http
+              port: http
 
       volumes:
         {{- range .Values.mcus }}
@@ -94,10 +100,10 @@ spec:
             name: {{ .Values.klipperConfig }}
         - name: run
           persistentVolumeClaim:
-           claimName: klipper-run
+           claimName: {{ include "chart.fullname" . }}-run
         - name: printer-data
           persistentVolumeClaim:
-           claimName: klipper-printer-data
+           claimName: {{ include "chart.fullname" . }}-printer-data
 
       {{- with .Values.nodeSelector }}
       nodeSelector:

@@ -3,6 +3,7 @@ kind: ConfigMap
 metadata:
   name: {{ include "mainsail.fullname" . }}
   labels:
-    {{- include "chart.labels" . | nindent 4 }}
+    {{- include "mainsail.labels" . | nindent 4 }}
 data:
-{{ (.Files.Glob "config/*").AsConfig | indent 2 }}
+  config.json: |
+{{ .Values.config | toJson | indent 4 }}

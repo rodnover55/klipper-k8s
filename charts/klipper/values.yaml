@@ -14,8 +14,8 @@ fullnameOverride: ""
 
 mcus:
   - name: usb
-    hostPath: /dev/serial/by-id
-    mountPath: /dev/serial/by-id
+    hostPath: /dev
+    mountPath: /dev
 
 klipperConfig: klipper-config
 printerDataName: printer-data
@@ -37,14 +37,10 @@ service:
   port: 80
 
 ingress:
-  enabled: true
+  enabled: false
   className: ""
   annotations: {}
-  hosts:
-    - host: moonraker.home.rnr
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
+  hosts: []
   tls: []
 
 resources: {}

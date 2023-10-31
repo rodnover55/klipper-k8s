@@ -26,6 +26,18 @@ spec:
       serviceAccountName: {{ include "chart.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: install
+          image: alpine
+          command: ["/bin/sh"]
+          args:
+            - -c 
+            - "test -f /opt/printer_data/config/printer.cfg || cp /opt/printer_data/init-config/printer.cfg /opt/printer_data/config/printer.cfg"
+          volumeMounts:
+            - name: klipper-config-data
+              mountPath: /opt/printer_data/config
+            - name: klipper-config
+              mountPath: /opt/printer_data/init-config
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -39,8 +51,10 @@ spec:
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
             {{- end }}
-            - name: klipper-config
+            - name: klipper-config-data
               mountPath: /opt/printer_data/config
+            - name: klipper-config
+              mountPath: /opt/printer_data/config/config.d
             - name: run
               mountPath: /opt/printer_data/run
             - name: printer-data
@@ -98,6 +112,9 @@ spec:
         - name: klipper-config
           configMap:
             name: {{ .Values.klipperConfig }}
+        - name: klipper-config-data
+          persistentVolumeClaim:
+           claimName: {{ include "chart.fullname" . }}-config-data
         - name: run
           persistentVolumeClaim:
            claimName: {{ include "chart.fullname" . }}-run
